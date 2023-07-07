@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot name="rover" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- materials -->
+    <xacro:include filename="$(find rover_description)/urdf/materials.urdf" />
+
+    <!-- rover parts -->
+    <xacro:include filename="$(find rover_description)/urdf/parts.urdf.xacro" />
+
+    <!-- Global properties -->
+    <xacro:property name="M_PI" value="3.141" />
+
+    <xacro:macro name="rover" params="color_scheme cover_type" >
+
+      <!-- rover definition -->
+      <link name="base_footprint" />
+      
+      <xacro:chassis_link name="base_link" size="0.6 0.3 0.1" />
+      <xacro:static_joint name="base_joint" parent="base_footprint" child="base_link" />
+      
+      <xacro:wheel name="right_wheel_frontside" />
+      <xacro:wheel_joint name="base_link_right_wheel_frontside" parent="base_link" child="right_wheel_frontside" xyz="0.2 -0.2 -0.05" />
+
+      <xacro:wheel name="right_wheel_backside" />
+      <xacro:wheel_joint name="base_link_right_wheel_backside" parent="base_link" child="right_wheel_backside" xyz="-0.2 -0.2 -0.05" />
+
+      <xacro:wheel name="left_wheel_frontside" /> 
+      <xacro:wheel_joint name="base_link_left_wheel_frontside" parent="base_link" child="left_wheel_frontside" xyz="0.2 0.2 -0.05" />
+
+      <xacro:wheel name="left_wheel_backside" /> 
+      <xacro:wheel_joint name="base_link_left_wheel_backside" parent="base_link" child="left_wheel_backside" xyz="-0.2 0.2 -0.05" />
+   
+    </xacro:macro>
+
+</robot>
