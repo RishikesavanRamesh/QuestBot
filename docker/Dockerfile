@@ -21,7 +21,7 @@ RUN apt-get update \
 
 #installing softwares needed
 
-RUN apt-get update && apt-get upgrade -y \
+RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y \
     python3-pip \
     git \
