@@ -9,7 +9,7 @@ ENV ROS_WS /opt/ros_ws
 COPY questbot/install/robot.install robot.install
 # Initialize the workspace and install python dependencies
 RUN mkdir -p $ROS_WS/src && \
-    vcs import $ROS_WS/src < robot.install && \
+    vcs import $ROS_WS/ < robot.install && \
     apt-get update
 
 USER $USERNAME
