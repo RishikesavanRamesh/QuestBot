@@ -19,7 +19,6 @@ RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y python3-pip
 ENV SHELL /bin/bash
 
-
 ###install user softwares###
 
 #basic tools
