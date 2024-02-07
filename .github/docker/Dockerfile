@@ -24,7 +24,7 @@ COPY /config/bashrc /home/$USERNAME/.bashrc
 
 WORKDIR /home/dyno/ws/src
 
-#install user softwares
+###install user softwares###
 
 #basic tools
 RUN apt-get update && apt-get -y install \
