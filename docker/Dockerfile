@@ -3,44 +3,28 @@ FROM ros:humble
 ARG USERNAME=questbot
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
-ARG USER_REPO=
 
-# Create the user
+# Create the user && config which is nessesary for some pkgs
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME 
+    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && mkdir /home/$USERNAME/.config && chown $USER_UID:$USER_GID /home/$USERNAME/.config
 
-# [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+# adding the user to sudo group
 RUN apt-get update \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y python3-pip
-ENV SHELL /bin/bash
+# installing language && installing timezone already done in ros image
+# RUN ....
 
-###install user softwares###
+#installing softwares needed
 
-#basic tools
-RUN apt-get update && apt-get -y install \
+RUN apt-get update && apt-get upgrade -y \
+    apt-get install -y \
+    python3-pip \
     git \
-    nano \
-    joystick \
-    jstest-gtk \
-    tmux \
-    bash-completion \
-    python3-argcomplete \
-    iputils-ping \
-    net-tools 
+    nano 
 
-#ros tools
-RUN apt-get update && apt-get install -y \
-    ros-humble-rviz2 \
-    ros-humble-turtlesim 
-
-#fix issues
-RUN apt-get update && apt-get install -y \
-    libogre1.12.10 #for rviz
-
-#user create
 USER $USERNAME
