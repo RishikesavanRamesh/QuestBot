@@ -32,7 +32,8 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v5
         with:
-          file: .github/docker/Dockerfile
+          context: .
+          file: ./.github/docker/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPONAME }}:latest
           platforms: linux/arm64, linux/amd64
