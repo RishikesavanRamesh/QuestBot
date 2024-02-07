@@ -43,6 +43,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-rviz2 \
     ros-humble-turtlesim 
 
+
 #fix issues
 RUN apt-get update && apt-get install -y \
     libogre1.12.10 #for rviz
