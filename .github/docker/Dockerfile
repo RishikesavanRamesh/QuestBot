@@ -24,7 +24,6 @@ COPY /config/bashrc /home/$USERNAME/.bashrc
 
 WORKDIR /home/dyno/ws/src
 
-
 ###install user softwares###
 
 #basic tools
