@@ -1,4 +1,3 @@
 - git:
-    local-name: nanosaur_simulations
     version: main
-    uri: https://github.com/rnanosaur/nanosaur_simulations.git
+    uri: https://github.com/manojm-dev/QuestBot.git
