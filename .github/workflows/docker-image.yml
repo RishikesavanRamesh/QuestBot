@@ -5,12 +5,12 @@ on:
     branches:
     - main
     paths:
-    - Dockerfile
+    - ./github/docker/Dockerfile
   pull_request:
     branches:
     - main
     paths:
-    - Dockerfile
+    - ./github/docker/Dockerfile
 
 jobs:
   docker:
