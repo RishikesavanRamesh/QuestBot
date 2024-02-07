@@ -19,11 +19,6 @@ RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y python3-pip
 ENV SHELL /bin/bash
 
-#configs
-COPY /config/bashrc /home/$USERNAME/.bashrc
-
-WORKDIR /home/dyno/ws/src
-
 ###install user softwares###
 
 #basic tools
@@ -43,15 +38,9 @@ RUN apt-get update && apt-get install -y \
     ros-humble-rviz2 \
     ros-humble-turtlesim 
 
-
-
-
 #fix issues
 RUN apt-get update && apt-get install -y \
     libogre1.12.10 #for rviz
-
-#entrypoing for image
-ENTRYPOINT ["/bin/bash", "-i", "-c", "source /home/$USERNAME/.bashrc"]
 
 #user create
 USER $USERNAME
