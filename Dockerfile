@@ -10,6 +10,8 @@ COPY questbot/install/robot.install robot.install
 # Initialize the workspace and install python dependencies
 RUN mkdir -p $ROS_WS/src && \
     vcs import $ROS_WS/ < robot.install && \
-    apt-get update
+    apt-get update && \
+    apt-get install python3-pip && \
+    apt-get install $(cat $ROS_WS/src/questbot/install/dev_apt_pkg.install)
 
 USER $USERNAME
