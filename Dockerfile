@@ -15,3 +15,15 @@ RUN mkdir -p $ROS_WS/src && \
     $(cat $ROS_WS/src/questbot/install/dev_tools.install) && \
     rosdep install --from-paths $ROS_WS/src --ignore-src -r -y && \
     rm -rf /var/lib/apt/lists/*
+
+#changing workingdir
+WORKDIR $ROS_WS
+
+# source ros package from entrypoint
+RUN sed --in-place --expression \
+      '$isource "$ROS_WS/install/setup.bash"' \
+      /ros_entrypoint.sh
+
+STOPSIGNAL SIGINT
+
+CMD [ "bash" ]
