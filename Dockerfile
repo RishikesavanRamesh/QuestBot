@@ -19,11 +19,6 @@ RUN mkdir -p $ROS_WS/src && \
 #changing workingdir
 WORKDIR $ROS_WS
 
-# source ros package from entrypoint
-RUN sed --in-place --expression \
-      '$isource "$ROS_WS/install/setup.bash"' \
-      /ros_entrypoint.sh
-
 STOPSIGNAL SIGINT
 
 CMD [ "bash" ]
