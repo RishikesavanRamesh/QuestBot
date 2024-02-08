@@ -2,12 +2,13 @@ FROM ros:humble-ros-base
 
 ENV ROS_DISTRO=humble
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+ENV ROS_WS /opt/ros_ws
 
 # Download and build questbot
-ENV ROS_WS /opt/ros_ws
-# Copy installaion scripts
+
+# 1) Copy installaion scripts
 COPY questbot/install/robot.install robot.install
-# Initialize the workspace and install python dependencies
+# 2) Initialize the workspace and install required pkg & dependencies
 RUN mkdir -p $ROS_WS/src && \
     vcs import $ROS_WS/ < robot.install && \
     apt-get update && apt-get install -y \
@@ -18,7 +19,5 @@ RUN mkdir -p $ROS_WS/src && \
 
 #changing workingdir
 WORKDIR $ROS_WS
-
+#stop all processes aka Ctr + C
 STOPSIGNAL SIGINT
-
-CMD [ "bash" ]
