@@ -2,3 +2,4 @@ nano
 tree
 iputils-ping
 net-tools
+python3-colcon-common-extensions
