@@ -1,3 +1,4 @@
 #!/bin/bash
 
-echo "hello"
+#source ros2
+source /opt/ros/humble/setup.bash

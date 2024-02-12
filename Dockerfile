@@ -16,11 +16,11 @@ RUN mkdir -p $ROS_WS/src && \
     $(cat $ROS_WS/src/questbot/install/dev_tools.install) && \
     rosdep install --from-paths $ROS_WS/src --ignore-src -r -y && \
     rm -rf /var/lib/apt/lists/*
-
+    
 #setting up working directory
 WORKDIR $ROS_WS
 
 #stop all processes aka Ctr + C
 STOPSIGNAL SIGINT
 
-ENTRYPOINT [ "/bin/bash","/entrypoint.sh" ]
+ENTRYPOINT [ "/bin/bash" ]
