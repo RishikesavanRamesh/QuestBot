@@ -2,7 +2,7 @@ version: "3.9"
 services:
   # Base image containing dependencies.
   base:
-    image: mybot:base
+    image: ${mybot}:base
     build:
       context: .
       dockerfile: Dockerfile
@@ -30,7 +30,7 @@ services:
   # Overlay image containing the source code.
   overlay:
     extends: base
-    image: mybot:overlay
+    image: ${mybot}:overlay
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -38,7 +38,7 @@ services:
  
   dev:
   extends: overlay
-  image: mybot:dev
+  image: ${mybot}:dev
   build:
     context: .
     dockerfile: Dockerfile
@@ -49,7 +49,7 @@ services:
       - USERNAME=${USERNAME:-devuser}
   volumes:
     # Mount the source code
-    - ./dyno_atman:/overlay_ws/src/dyno_atman:rw
+    - ./questbot:/overlay_ws/src/questbot:rw
     # Mount colcon build artifacts for faster rebuilds
     - ./.colcon/build/:/overlay_ws/build/:rw
     - ./.colcon/install/:/overlay_ws/install/:rw
