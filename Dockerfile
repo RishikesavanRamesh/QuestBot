@@ -83,6 +83,11 @@ COPY dependencies.repos .
 
 RUN vcs import < dependencies.repos
  
+# Use Cyclone DDS as middleware
+RUN apt-get update && apt-get install -y --no-install-recommends \
+ ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
 # Build the base Colcon workspace, installing dependencies first.
 WORKDIR /${BOT_NAME}
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
@@ -173,14 +178,19 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
 
 
 
- RUN colcon build --install-base /somewhere yuou like or in the /opt/ros/ # them remove the source codes,, 
+RUN colcon build 
+ ##--install-base /somewhere yuou like or in the /opt/ros/ # them remove the source codes,, 
 
- RUN rm /${BOT_NAME} #
+RUN source  
+
+RUN rm -rf /${BOT_NAME}/src
 
 
+RUN echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /root/.bashrc \
+    echo "if [ -f /${BOT_NAME}/src/setup.bash ]; then source /${BOT_NAME}/src/setup.bash ; fi"
 
 
-should have move the colcon build in the install base to the github action so that it will be build there ...
+#  yeah moved ## older:should have move the colcon build in the install base to the github action so that it will be build there ...
 #  one work pending that is the entrypoint which may be a bash script that launches dyno atman service. 
 #   (all the other things will be taken care using the install.sh script)
 

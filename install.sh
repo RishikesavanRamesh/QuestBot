@@ -104,7 +104,7 @@ echo $DIR/.env written
 cat << 'EOF' > $DIR/docker-compose.yaml
 version: "3.9"
 
-SEVICES INCLUDE VPN CONTAINER AND BOT CONTAINER 
+SEVICES INCLUDE VPN CONTAINER AND BOT CONTAINER:deploy 
 
 EOF
 

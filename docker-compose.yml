@@ -1,0 +1,64 @@
+version: "3.9"
+services:
+  # Base image containing dependencies.
+  base:
+    image: mybot:base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ROS_DISTRO: humble
+      target: base
+    # Interactive shell
+    stdin_open: true
+    tty: true
+    # Networking and IPC for ROS 2
+    network_mode: host
+    ipc: host
+    # Needed to display graphical applications
+    privileged: true
+    environment:
+      # Allows graphical programs in the container.
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      # Allows graphical programs in the container.
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+ 
+  # Overlay image containing the source code.
+  overlay:
+    extends: base
+    image: mybot:overlay
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: overlay
+ 
+  dev:
+  extends: overlay
+  image: mybot:dev
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: dev
+    args:
+      - USER_UID=${UID:-1000}
+      - USER_GID=${GID:-1000}
+      - USERNAME=${USERNAME:-devuser}
+  volumes:
+    # Mount the source code
+    - ./dyno_atman:/overlay_ws/src/dyno_atman:rw
+    # Mount colcon build artifacts for faster rebuilds
+    - ./.colcon/build/:/overlay_ws/build/:rw
+    - ./.colcon/install/:/overlay_ws/install/:rw
+    - ./.colcon/log/:/overlay_ws/log/:rw
+  user: ${USERNAME:-devuser}
+  command: sleep infinity
+
+
+
+
+  ### it is recommended to merge the two branches [ dockerfiles repo , dyno atman repo ] to avoid the overheads of downloading private repo{ dyno atman } intothe github actions instance of the dockerfile repo whenever necessary ,( 
+# ( other wise) you have to share the deploy keys to make this work within the github action which has few overheads like creaing and storing deploy keys and manageing the secrets  .. 
