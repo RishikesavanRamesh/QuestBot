@@ -1,9 +1,0 @@
-repositories:
-
-  # TurtleBot3 Repo
-  # TODO: Remote once this PR is in the binary release:
-  # https://github.com/ROBOTIS-GIT/turtlebot3/pull/916
-  turtlebot3:
-    type: git
-    url: https://github.com/ROBOTIS-GIT/turtlebot3.git
-    version: humble-devel

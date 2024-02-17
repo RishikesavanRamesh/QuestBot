@@ -52,7 +52,7 @@ services:
         - USERNAME=${USERNAME:-devuser}
     volumes:
       # Mount the source code
-      - ./questbot:/${BOT_NAME}/src/questbot:rw
+      
       # Mount colcon build artifacts for faster rebuilds
       - ./.colcon/build/:/${BOT_NAME}/build/:rw
       - ./.colcon/install/:/${BOT_NAME}/install/:rw
