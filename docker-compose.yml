@@ -2,7 +2,7 @@ version: "3.9"
 services:
   # Base image containing dependencies.
   base:
-    image: ${mybot}:base
+    image: ${BOT_NAME}:base
     build:
       context: .
       dockerfile: Dockerfile
@@ -26,39 +26,36 @@ services:
       # Allows graphical programs in the container.
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
- 
+
   # Overlay image containing the source code.
   overlay:
     extends: base
-    image: ${mybot}:overlay
+    image: ${BOT_NAME}:overlay
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        ROS_DISTRO: humble
+        BOT_NAME: questbot
       target: overlay
- 
+
   dev:
-  extends: overlay
-  image: ${mybot}:dev
-  build:
-    context: .
-    dockerfile: Dockerfile
-    target: dev
-    args:
-      - USER_UID=${UID:-1000}
-      - USER_GID=${GID:-1000}
-      - USERNAME=${USERNAME:-devuser}
-  volumes:
-    # Mount the source code
-    - ./questbot:/overlay_ws/src/questbot:rw
-    # Mount colcon build artifacts for faster rebuilds
-    - ./.colcon/build/:/overlay_ws/build/:rw
-    - ./.colcon/install/:/overlay_ws/install/:rw
-    - ./.colcon/log/:/overlay_ws/log/:rw
-  user: ${USERNAME:-devuser}
-  command: sleep infinity
-
-
-
-
-  ### it is recommended to merge the two branches [ dockerfiles repo , dyno atman repo ] to avoid the overheads of downloading private repo{ dyno atman } intothe github actions instance of the dockerfile repo whenever necessary ,( 
-# ( other wise) you have to share the deploy keys to make this work within the github action which has few overheads like creaing and storing deploy keys and manageing the secrets  .. 
+    extends: overlay
+    image: ${BOT_NAME}:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        - USER_UID=${UID:-1000}
+        - USER_GID=${GID:-1000}
+        - USERNAME=${USERNAME:-devuser}
+    volumes:
+      # Mount the source code
+      - ./questbot:/${BOT_NAME}/src/questbot:rw
+      # Mount colcon build artifacts for faster rebuilds
+      - ./.colcon/build/:/${BOT_NAME}/build/:rw
+      - ./.colcon/install/:/${BOT_NAME}/install/:rw
+      - ./.colcon/log/:/${BOT_NAME}/log/:rw
+    user: ${USERNAME:-devuser}
+    command: sleep infinity

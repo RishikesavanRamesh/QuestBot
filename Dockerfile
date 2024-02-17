@@ -14,6 +14,16 @@ ARG USERNAME=ros
 ###########################################
 FROM ubuntu:22.04 AS base
 
+
+
+
+ARG ROS_DISTRO
+
+
+
+
+
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install language
@@ -66,11 +76,18 @@ ENV DEBIAN_FRONTEND=
 
 
 
-
 ###########################################
 #  Overlay image
 ###########################################
 FROM base AS overlay
+
+
+
+
+
+ARG ROS_DISTRO
+ARG BOT_NAME
+
 
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
@@ -79,9 +96,8 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir -p /${BOT_NAME}/src
 WORKDIR /${BOT_NAME}/src
 
-COPY dependencies.repos .
 
-RUN vcs import < dependencies.repos
+
  
 # Use Cyclone DDS as middleware
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -92,6 +108,9 @@ ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 WORKDIR /${BOT_NAME}
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
  && apt-get update -y \
+ && apt-get install -y python3-rosdep \
+ && rosdep init && rosdep update \
+ && apt install -y python3-colcon-common-extensions \
  && rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y \
  && colcon build --symlink-install
 
@@ -107,6 +126,14 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
 #  Developer image
 ###########################################
 FROM overlay AS dev
+
+
+
+ARG ROS_DISTRO
+ARG USERNAME
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -125,9 +152,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN rosdep init || echo "rosdep already initialized"
 
-ARG USERNAME=${USERNAME}
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+
 
 # Create a non-root user
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -158,6 +183,11 @@ ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 ###########################################
 FROM overlay AS deploy
 
+
+
+ARG ROS_DISTRO
+ARG BOT_NAME
+
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
  
@@ -165,9 +195,6 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir -p /${BOT_NAME}/src
 WORKDIR /${BOT_NAME}/src
 
-COPY dependencies.repos .
-
-RUN vcs import < dependencies.repos
  
 # Build the base Colcon workspace, installing dependencies first.
 WORKDIR /${BOT_NAME}
@@ -181,7 +208,7 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
 RUN colcon build 
  ##--install-base /somewhere yuou like or in the /opt/ros/ # them remove the source codes,, 
 
-RUN source  
+RUN source install/setup.bash
 
 RUN rm -rf /${BOT_NAME}/src
 
