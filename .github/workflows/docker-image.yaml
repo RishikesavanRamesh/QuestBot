@@ -41,8 +41,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Build the specific stage of the multi-stage Dockerfile
+      - uses: actions/checkout@v3
       - name: Build DEPLOY stage
-        run: docker build --target deploy -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPONAME }}:deploy 
+        run:ls ; docker build --target deploy -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPONAME }}:deploy 
         
       # Push the built image to Docker Hub
       - name: Push DEPLOY stage image
