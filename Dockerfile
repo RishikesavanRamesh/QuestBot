@@ -2,7 +2,7 @@
 
 ARG ROS_DISTRO=humble
 ARG BOT_NAME=questbot
-ARG USERNAME=ros
+ARG DEVELOPMENT_USERNAME=ros
 
 
 
@@ -91,7 +91,7 @@ ARG BOT_NAME
 
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
- 
+
 # Create Colcon workspace with external dependencies
 RUN mkdir -p /${BOT_NAME}/src
 WORKDIR /${BOT_NAME}/src
@@ -130,7 +130,7 @@ FROM overlay AS dev
 
 
 ARG ROS_DISTRO
-ARG USERNAME
+ARG DEVELOPMENT_USERNAME
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
@@ -155,19 +155,22 @@ RUN rosdep init || echo "rosdep already initialized"
 
 
 # Create a non-root user
-RUN groupadd --gid $USER_GID $USERNAME \
-  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+RUN groupadd --gid $USER_GID $DEVELOPMENT_USERNAME \
+  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $DEVELOPMENT_USERNAME \
   # Add sudo support for the non-root user
   && apt-get update \
   && apt-get install -y sudo \
-  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
-  && chmod 0440 /etc/sudoers.d/$USERNAME \
+  && echo $DEVELOPMENT_USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$DEVELOPMENT_USERNAME\
+  && chmod 0440 /etc/sudoers.d/$DEVELOPMENT_USERNAME \
   && rm -rf /var/lib/apt/lists/*
+
+# Change ownership of the src directory to $DEVELOPMENT_USERNAME
+RUN chown -R $DEVELOPMENT_USERNAME:$DEVELOPMENT_USERNAME /${BOT_NAME}
 
 # Set up autocompletion for user
 RUN apt-get update && apt-get install -y git-core bash-completion \
-  && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc \
-  && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
+  && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$DEVELOPMENT_USERNAME/.bashrc \
+  && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$DEVELOPMENT_USERNAME/.bashrc \
   && rm -rf /var/lib/apt/lists/* 
 
 ENV DEBIAN_FRONTEND=
@@ -210,17 +213,21 @@ RUN colcon build
 
 RUN source install/setup.bash
 
-RUN rm -rf /${BOT_NAME}/src
+RUN rm -rf /${BOT_NAME}/{src,log,build}
 
 
 RUN echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /root/.bashrc \
-    echo "if [ -f /${BOT_NAME}/src/setup.bash ]; then source /${BOT_NAME}/src/setup.bash ; fi"
+    && echo "if [ -f /${BOT_NAME}/src/setup.bash ]; then source /${BOT_NAME}/src/setup.bash ; fi" >> /root/.bashrc
 
 
 #  yeah moved ## older:should have move the colcon build in the install base to the github action so that it will be build there ...
 #  one work pending that is the entrypoint which may be a bash script that launches dyno atman service. 
 #   (all the other things will be taken care using the install.sh script)
 
+
+# to do : have to decide and set the username for the deploy/release container, one who runs the startup service of our robot
+
+# have to change the deploy to release
 
 
 

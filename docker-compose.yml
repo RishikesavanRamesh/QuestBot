@@ -32,12 +32,13 @@ services:
     extends: base
     image: ${BOT_NAME}:overlay
     build:
-      context: .
+      context: .  
       dockerfile: Dockerfile
       args:
         ROS_DISTRO: humble
         BOT_NAME: questbot
       target: overlay
+    hostname: localhost
 
   dev:
     extends: overlay
@@ -49,7 +50,7 @@ services:
       args:
         - USER_UID=${UID:-1000}
         - USER_GID=${GID:-1000}
-        - USERNAME=${USERNAME:-devuser}
+        - DEVELOPMENT_USERNAME=${DEVELOPMENT_USERNAME:-developer}
     volumes:
       # Mount the source code
       
@@ -57,5 +58,5 @@ services:
       - ./.colcon/build/:/${BOT_NAME}/build/:rw
       - ./.colcon/install/:/${BOT_NAME}/install/:rw
       - ./.colcon/log/:/${BOT_NAME}/log/:rw
-    user: ${USERNAME:-devuser}
+    user: ${DEVELOPMENT_USERNAME:-developer}
     command: sleep infinity
