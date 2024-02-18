@@ -1,10 +1,10 @@
 name: docs
 
 on:
-  release:
-  push:
-    tags:
-      - 'v*'
+  #release:
+  #push:
+  #  tags:
+  #    - 'v*'
   workflow_dispatch:
 
 jobs:
