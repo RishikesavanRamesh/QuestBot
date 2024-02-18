@@ -12,8 +12,8 @@ ARG DEVELOPMENT_USERNAME=ros
 ###########################################
 # Base image
 ###########################################
-#FROM ubuntu:22.04 AS base
-FROM kasmweb/ubuntu-jammy-dind:1.15.0 AS base
+FROM ubuntu:22.04 AS base
+#FROM kasmweb/ubuntu-jammy-dind:1.15.0 AS base
 
 
 
