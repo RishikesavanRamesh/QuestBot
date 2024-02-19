@@ -86,33 +86,22 @@ FROM base AS overlay
 
 
 ARG ROS_DISTRO
-ARG BOT_NAME
 
 
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
-
-# Create Colcon workspace with external dependencies
-RUN mkdir -p /${BOT_NAME}/src
-WORKDIR /${BOT_NAME}/src
-
-
-
  
 # Use Cyclone DDS as middleware
 RUN apt-get update && apt-get install -y --no-install-recommends \
  ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-# Build the base Colcon workspace, installing dependencies first.
-WORKDIR /${BOT_NAME}
+# Install colcon and rosdep
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
  && apt-get update -y \
  && apt-get install -y python3-rosdep \
  && rosdep init && rosdep update \
- && apt install -y python3-colcon-common-extensions \
- && rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y \
- && colcon build --symlink-install
+ && apt install -y python3-colcon-common-extensions 
 
 
 
@@ -165,7 +154,7 @@ RUN groupadd --gid $USER_GID $DEVELOPMENT_USERNAME \
   && rm -rf /var/lib/apt/lists/*
 
 # Change ownership of the src directory to $DEVELOPMENT_USERNAME
-RUN chown -R $DEVELOPMENT_USERNAME:$DEVELOPMENT_USERNAME /${BOT_NAME}
+RUN chown -R $DEVELOPMENT_USERNAME:$DEVELOPMENT_USERNAME /workspace
 
 # Set up autocompletion for user
 RUN apt-get update && apt-get install -y git-core bash-completion \
@@ -187,7 +176,7 @@ ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 FROM overlay AS deploy
 
 
-
+##have to create a user here, like service@questbot or bot@questbot
 ARG ROS_DISTRO
 ARG BOT_NAME
 
@@ -198,13 +187,16 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir -p /${BOT_NAME}/src
 WORKDIR /${BOT_NAME}/src
 
+COPY ./src/. .
+
+# run vcs import
+
  
 # Build the base Colcon workspace, installing dependencies first.
 WORKDIR /${BOT_NAME}
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
  && apt-get update -y \
- && rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y \
- && colcon build --symlink-install
+ && rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y 
 
 
 

@@ -36,7 +36,6 @@ services:
       dockerfile: Dockerfile
       args:
         ROS_DISTRO: humble
-        BOT_NAME: questbot
       target: overlay
     hostname: localhost
 
