@@ -134,7 +134,7 @@ ARG DEVELOPMENT_USERNAME
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-
+RUN mkdir /workspace
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
   bash-completion \
