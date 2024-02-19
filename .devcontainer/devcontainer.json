@@ -32,6 +32,11 @@
 				"yzhang.markdown-all-in-one",
 				"zachflower.uncrustify"
 			]
-		}
+		},
+		  "codespaces": {
+    			"openFiles": [
+      			"README.md"
+    ]
+  }
 	}
 }
