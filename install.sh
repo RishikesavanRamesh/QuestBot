@@ -1,4 +1,4 @@
-    #!/bin/bash
+#!/bin/bash
 
 # Script to deploy a self-hosted service using docker-compose.
 
