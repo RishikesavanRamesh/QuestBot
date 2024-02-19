@@ -83,8 +83,6 @@ FROM base AS overlay
 
 
 
-
-
 ARG ROS_DISTRO
 
 
@@ -124,7 +122,27 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 RUN mkdir /workspace
+
+ENV MODE=develop
+
+# Copy the package list and installation script
+COPY dependencies.sh install_dependencies.sh /tmp/
+
+
+RUN apt update 
+
+WORKDIR /tmp/
+
+RUN chmod +x *dependencies.sh
+
+#Run the installation script
+RUN ./install_dependencies.sh
+
+# Clean up
+RUN rm /tmp/dependencies.sh /tmp/install_dependencies.sh
+
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
   bash-completion \
   build-essential \
@@ -175,12 +193,34 @@ ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 ###########################################
 FROM overlay AS deploy
 
-
+USER root
 ##have to create a user here, like service@questbot or bot@questbot
 ARG ROS_DISTRO
 ARG BOT_NAME
 
 ENV ROS_DISTRO=${ROS_DISTRO}
+
+ENV MODE=deploy
+
+# Copy the package list and installation script
+COPY dependencies.sh install_dependencies.sh /tmp/
+
+
+RUN apt update 
+
+WORKDIR /tmp/
+
+RUN chmod +x *dependencies.sh
+
+#Run the installation script
+RUN ./install_dependencies.sh
+
+# Clean up
+RUN rm /tmp/dependencies.sh /tmp/install_dependencies.sh
+
+
+
+
 SHELL ["/bin/bash", "-c"]
  
 # Create Colcon workspace with external dependencies
