@@ -5,7 +5,6 @@
     "dockerComposeFile": ["../docker-compose.yml"],
     "service": "dev",
     "shutdownAction": "none",
-	"workspaceMount": "source=${localWorkspaceFolder}/sub-folder,target=/workspace,type=bind,consistency=cached",
 	"workspaceFolder": "/workspace",
 	"containerEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
