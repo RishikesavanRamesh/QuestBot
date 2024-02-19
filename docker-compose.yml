@@ -53,10 +53,6 @@ services:
         - DEVELOPMENT_USERNAME=${DEVELOPMENT_USERNAME:-developer}
     volumes:
       # Mount the source code
-      
-      # Mount colcon build artifacts for faster rebuilds
-      - ./.colcon/build/:/${BOT_NAME}/build/:rw
-      - ./.colcon/install/:/${BOT_NAME}/install/:rw
-      - ./.colcon/log/:/${BOT_NAME}/log/:rw
+      - ./:/workspace:rw
     user: ${DEVELOPMENT_USERNAME:-developer}
     command: sleep infinity
