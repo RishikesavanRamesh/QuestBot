@@ -9,7 +9,7 @@ install_packages() {
     
     # Iterate over the list and install each package
     for package in "${packages[@]}"; do
-        apt install -y "$package"
+        apt install -y "$package" || echo "Warning: Package $package not found or failed to install"
     done
 }
 
