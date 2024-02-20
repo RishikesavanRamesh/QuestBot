@@ -53,6 +53,7 @@ services:
     volumes:
       # Mount the source code
       - ./:/workspace:rw
+      - ${SSH_KEY_PATH:-/nonexistent}:/run/secrets/ssh_key
     user: ${DEVELOPMENT_USERNAME:-developer}
     command: sleep infinity
     environment: 
@@ -62,4 +63,4 @@ services:
   
 secrets:
    ssh_key:
-     file: ${SSH_KEY_PATH}
+     file: ${SSH_KEY_PATH:-/nonexistent}

@@ -1,14 +1,5 @@
 
 
-ARG ROS_DISTRO=humble
-ARG BOT_NAME=questbot
-ARG DEVELOPMENT_USERNAME=ros
-
-
-
-
-
-
 ###########################################
 # Base image
 ###########################################
@@ -170,6 +161,12 @@ RUN groupadd --gid $USER_GID $DEVELOPMENT_USERNAME \
   && echo $DEVELOPMENT_USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$DEVELOPMENT_USERNAME\
   && chmod 0440 /etc/sudoers.d/$DEVELOPMENT_USERNAME \
   && rm -rf /var/lib/apt/lists/*
+
+# Add the non-root user to the necessary groups for GUI access
+RUN usermod -aG video,audio $DEVELOPMENT_USERNAME
+
+# Check if /tmp/.X11-unix exists before attempting to create it
+RUN [ -d /tmp/.X11-unix ] || mkdir -p /tmp/.X11-unix && chown $DEVELOPMENT_USERNAME /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
 # Change ownership of the src directory to $DEVELOPMENT_USERNAME
 RUN chown -R $DEVELOPMENT_USERNAME:$DEVELOPMENT_USERNAME /workspace
