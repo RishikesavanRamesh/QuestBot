@@ -55,3 +55,9 @@ services:
       - ./:/workspace:rw
     user: ${DEVELOPMENT_USERNAME:-developer}
     command: sleep infinity
+    secrets:
+      - ssh_key
+  
+secrets:
+   ssh_key:
+     file: ${SSH_KEY_PATH}
