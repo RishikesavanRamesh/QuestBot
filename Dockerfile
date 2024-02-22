@@ -9,7 +9,7 @@ FROM ubuntu:22.04 AS base
 
 
 ARG ROS_DISTRO
-
+ARG ORG_NAME=robotoai
 
 
 
@@ -53,6 +53,10 @@ RUN sudo add-apt-repository universe \
   && apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-ros-base \
     python3-argcomplete \
+    python3-vcstool \
+    python3-colcon-common-extensions \
+    python3-rosdep \ 
+    git \
   && rm -rf /var/lib/apt/lists/*
 
 ENV ROS_DISTRO=${ROS_DISTRO}
@@ -75,7 +79,11 @@ FROM base AS overlay
 
 
 ARG ROS_DISTRO
+ARG BUILD_USER=builder
 
+
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 
 ENV ROS_DISTRO=${ROS_DISTRO}
 SHELL ["/bin/bash", "-c"]
@@ -89,15 +97,43 @@ ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
  && apt-get update -y \
  && apt-get install -y python3-rosdep \
- && rosdep init && rosdep update \
  && apt install -y python3-colcon-common-extensions 
 
 
 
+# Create a non-root user
+RUN groupadd --gid $USER_GID $BUILD_USER \
+  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $BUILD_USER \
+  # Add sudo support for the non-root user
+  && apt-get update \
+  && apt-get install -y sudo \
+  && echo $BUILD_USER ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$BUILD_USER\
+  && chmod 0440 /etc/sudoers.d/$BUILD_USER \
+  && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /$ORG_NAME
 
+RUN chown -R $BUILD_USER:$BUILD_USER /$ORG_NAME
 
+USER $BUILD_USER
 
+RUN sudo rosdep init && rosdep update 
+
+WORKDIR /home/${BUILD_USER}/workspace/src
+
+COPY ./src/.repos .
+
+# RUN vcs import < .repos 
+
+WORKDIR /home/${BUILD_USER}/workspace/
+
+RUN rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y 
+
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && colcon build --install-base /${ORG_NAME}/share/$BOT_NAME/.
+
+USER root
+
+RUN deluser --remove-home ${BUILD_USER} 
 
 
 ###########################################
@@ -109,28 +145,8 @@ FROM overlay AS dev
 
 ARG ROS_DISTRO
 ARG DEVELOPMENT_USERNAME
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
 
-RUN mkdir /workspace
-
-ENV MODE=develop
-
-# Copy the package list and installation script
-COPY dependencies.sh install_dependencies.sh /tmp/
-
-
-RUN apt update 
-
-WORKDIR /tmp/
-
-RUN chmod +x *dependencies.sh
-
-#Run the installation script
-RUN ./install_dependencies.sh
-
-# Clean up
-RUN rm /tmp/dependencies.sh /tmp/install_dependencies.sh
+ENV DEVELOPMENT_USERNAME=${DEVELOPMENT_USERNAME}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -148,39 +164,40 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   vim \
   && rm -rf /var/lib/apt/lists/*
 
-RUN rosdep init || echo "rosdep already initialized"
-
-
-
-# Create a non-root user
-RUN groupadd --gid $USER_GID $DEVELOPMENT_USERNAME \
-  && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $DEVELOPMENT_USERNAME \
-  # Add sudo support for the non-root user
-  && apt-get update \
-  && apt-get install -y sudo \
-  && echo $DEVELOPMENT_USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$DEVELOPMENT_USERNAME\
-  && chmod 0440 /etc/sudoers.d/$DEVELOPMENT_USERNAME \
-  && rm -rf /var/lib/apt/lists/*
-
-# Add the non-root user to the necessary groups for GUI access
-RUN usermod -aG video,audio $DEVELOPMENT_USERNAME
-
-# Check if /tmp/.X11-unix exists before attempting to create it
-RUN [ -d /tmp/.X11-unix ] || mkdir -p /tmp/.X11-unix && chown $DEVELOPMENT_USERNAME /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
-
-# Change ownership of the src directory to $DEVELOPMENT_USERNAME
-RUN chown -R $DEVELOPMENT_USERNAME:$DEVELOPMENT_USERNAME /workspace
-
-# Set up autocompletion for user
-RUN apt-get update && apt-get install -y git-core bash-completion \
-  && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$DEVELOPMENT_USERNAME/.bashrc \
-  && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$DEVELOPMENT_USERNAME/.bashrc \
-  && rm -rf /var/lib/apt/lists/* 
 
 ENV DEBIAN_FRONTEND=
 ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 
 
+
+COPY  <<"entrypoint_new.sh" /tmp/.
+
+DEVELOPMENT_USERNAME=TESTUSER
+USER_GID=1000
+USER_UID=1000
+# Check if the user already exists
+if ! id -u $DEVELOPMENT_USERNAME > /dev/null 2>&1; then
+    # Create the user and workspace directory
+    groupadd --gid $USER_GID $DEVELOPMENT_USERNAME
+    useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $DEVELOPMENT_USERNAME
+    echo "$DEVELOPMENT_USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$DEVELOPMENT_USERNAME
+    chmod 0440 /etc/sudoers.d/$DEVELOPMENT_USERNAME
+    mkdir -p /home/$DEVELOPMENT_USERNAME/workspace
+    chown -R $DEVELOPMENT_USERNAME:$DEVELOPMENT_USERNAME /home/$DEVELOPMENT_USERNAME/workspace
+fi
+su ${DEVELOPMENT_USERNAME}
+entrypoint_new.sh
+
+# # Set up autocompletion for the user
+# apt-get update
+# apt-get install -y git-core bash-completion
+# echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$DEVELOPMENT_USERNAME/.bashrc
+# echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$DEVELOPMENT_USERNAME/.bashrc
+
+RUN chmod +x /tmp/entrypoint_new.sh
+
+
+CMD ["bash", "/tmp/entrypoint_new.sh" ]
 
 
 
@@ -190,63 +207,24 @@ ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
 ###########################################
 FROM overlay AS deploy
 
-USER root
-##have to create a user here, like service@questbot or bot@questbot
-ARG ROS_DISTRO
-ARG BOT_NAME
+RUN useradd -m service
 
-ENV ROS_DISTRO=${ROS_DISTRO}
+USER service
 
-ENV MODE=deploy
+RUN chmod -R o-rwx /
 
-# Copy the package list and installation script
-COPY dependencies.sh install_dependencies.sh /tmp/
+RUN chmod -R o+r $VIRTUAL_ENV
 
+RUN chmod -R o+rx /$ORG_NAME/share/$BOT_NAME
 
-RUN apt update 
-
-WORKDIR /tmp/
-
-RUN chmod +x *dependencies.sh
-
-#Run the installation script
-RUN ./install_dependencies.sh
-
-# Clean up
-RUN rm /tmp/dependencies.sh /tmp/install_dependencies.sh
+RUN chown -R service:service /$ORG_NAME
 
 
+COPY --chmod=0666 --chown=service:service <<"robot_service.sh" /.
+ros2 launch something
+robot_service.sh
 
-
-SHELL ["/bin/bash", "-c"]
- 
-# Create Colcon workspace with external dependencies
-RUN mkdir -p /${BOT_NAME}/src
-WORKDIR /${BOT_NAME}/src
-
-COPY ./src/. .
-
-# run vcs import
-
- 
-# Build the base Colcon workspace, installing dependencies first.
-WORKDIR /${BOT_NAME}
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
- && apt-get update -y \
- && rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y 
-
-
-
-RUN colcon build 
- ##--install-base /somewhere yuou like or in the /opt/ros/ # them remove the source codes,, 
-
-RUN source install/setup.bash
-
-RUN rm -rf /${BOT_NAME}/{src,log,build}
-
-
-RUN echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /root/.bashrc \
-    && echo "if [ -f /${BOT_NAME}/src/setup.bash ]; then source /${BOT_NAME}/src/setup.bash ; fi" >> /root/.bashrc
+ENTRYPOINT [ "robot_service.sh" ]
 
 
 #  yeah moved ## older:should have move the colcon build in the install base to the github action so that it will be build there ...

@@ -47,17 +47,17 @@ services:
       dockerfile: Dockerfile
       target: dev
       args:
-        - USER_UID=${UID:-1000}
-        - USER_GID=${GID:-1000}
-        - DEVELOPMENT_USERNAME=${DEVELOPMENT_USERNAME:-developer}
+      
     volumes:
       # Mount the source code
       - ./:/workspace:rw
       - ${SSH_KEY_PATH:-/nonexistent}:/run/secrets/ssh_key
-    user: ${DEVELOPMENT_USERNAME:-developer}
     command: sleep infinity
     environment: 
       SSH_KEY_PATH: /run/secrets/ssh_key
+      DEVELOPMENT_USERNAME: $USER
+      USER_GID: $UID
+      USER_UID: $GID
     secrets:
       - ssh_key
   
